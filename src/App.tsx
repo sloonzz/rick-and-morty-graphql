@@ -2,10 +2,10 @@ import { useQuery } from '@apollo/client'
 import { Box, Button, Card, CardActionArea, CardContent, CircularProgress, Grid, TextField, Typography, debounce } from '@mui/material'
 import { gql } from './__generated__'
 import { isDefined } from './utils/is-defined'
-import { useSearchParams } from 'react-router-dom'
 import { ChevronLeft, ChevronRight } from '@mui/icons-material'
 import React from 'react'
 import { SelectedCharacter } from './components/SelectedCharacter'
+import { SEARCH_PARAM_KEYS, useSearchParamsWrapper } from './utils/search-params'
 
 const getCharactersQuery = gql(`
   query GetCharacters($page: Int!, $search: String) {
@@ -36,6 +36,7 @@ const getCharacterQuery = gql(`
         id
         name
         gender
+        species
         image
         origin {
           id
@@ -45,32 +46,30 @@ const getCharacterQuery = gql(`
             name
           }
           dimension
+          type
         }
         location {
+          id
           name
-          dimension
           residents {
             id
             name
           }
+          dimension
+          type
         }
         status
         episode {
           episode
           name
+          air_date
         }
     }
   }
 `)
 
-const SEARCH_PARAM_KEYS = {
-  PAGE: 'page',
-  QUERY: 'query',
-  SELECTED: 'selected',
-}
-
 function App() {
-  const [searchParams, setSearchParams] = useSearchParams()
+  const { searchParams, setSearchParamValue } = useSearchParamsWrapper()
   const page = parseInt(searchParams.get(SEARCH_PARAM_KEYS.PAGE) ?? '1')
   const searchQuery = searchParams.get(SEARCH_PARAM_KEYS.QUERY)
   const selectedCharacterId = searchParams.get(SEARCH_PARAM_KEYS.SELECTED) ?? '1'
@@ -81,13 +80,6 @@ function App() {
   const totalPages = data?.characters?.info?.pages ?? 0
   const canGoNextPage = totalPages > page
   const canGoPrevPage = page !== 1
-
-  const setSearchParamValue = (key: string, value: string) => {
-    setSearchParams(searchParams => {
-      searchParams.set(key, value)
-      return searchParams
-    })
-  }
 
   const nextPage = () => {
     if (canGoNextPage) {
@@ -118,10 +110,12 @@ function App() {
     <>
       <Grid width='100vw' paddingX={8} spacing={2} container>
         <Grid padding={2} item container direction={'column'} xs={9}>
-          {selectedCharacter && <>
-            <SelectedCharacter selectedCharacter={selectedCharacter}></SelectedCharacter>
-          </>}
-          {isSelectedCharacterDataLoading && <Grid item xs={12} display='flex' justifyContent={'center'} alignItems={'center'}><CircularProgress></CircularProgress></Grid>}
+          <Card sx={{ height: '100%', padding: 4 }}>
+            {selectedCharacter && <>
+              <SelectedCharacter selectedCharacter={selectedCharacter}></SelectedCharacter>
+            </>}
+            {isSelectedCharacterDataLoading && <Grid item height={'100%'} xs={12} display='flex' justifyContent={'center'} alignItems={'center'}><CircularProgress></CircularProgress></Grid>}
+          </Card>
         </Grid>
         <Grid item xs={3} height={'90vh'} display='flex' flexDirection={'column'} justifyContent={'space-between'} alignItems={'center'}>
           <TextField
@@ -141,7 +135,7 @@ function App() {
                   <CardActionArea onClick={() => onSelectCharacter(character.id)}>
                     <CardContent sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                       <Box marginBottom={2} component='img' alt={`${character.name} image`} src={character.image ?? ''}></Box>
-                      <Typography textAlign={'center'} sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
+                      <Typography textAlign={'center'} sx={{ fontSize: 14 }} gutterBottom>
                         {character.name}
                       </Typography>
                     </CardContent>
