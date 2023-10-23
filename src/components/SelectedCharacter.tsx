@@ -76,6 +76,7 @@ const SelectedCharacter = ({ selectedCharacter }: SelectedCharacterProps) => {
                     length={selectedCharacter.location?.residents.length ?? 0}
                 />
             ) : 'unknown'
+    const firstAppearedInDisplay = `${selectedCharacter.episode[0]?.name} - ${selectedCharacter.episode[0]?.episode}`
     return (
         <Grid item container spacing={4} xs={12}>
             <Grid item xs={4} display='flex' flexDirection={'column'}>
@@ -83,7 +84,9 @@ const SelectedCharacter = ({ selectedCharacter }: SelectedCharacterProps) => {
                     <Box width='100%' height='100%' maxWidth='300px' maxHeight='300px' component='img' alt={`${selectedCharacter.name} image`} src={selectedCharacter.image ?? ''}></Box>
                 </Box>
                 <Typography marginBottom={3} variant='h4' textAlign={'center'}>{selectedCharacter.name}</Typography>
-                <Typography marginBottom={1} variant='h5'>{selectedCharacter.gender} - {selectedCharacter.species}</Typography>
+                <Typography color="grey.500">Species:</Typography>
+                <Typography marginBottom={1} variant='h5'>{selectedCharacter.species} - {selectedCharacter.gender}</Typography>
+                <Typography color="grey.500">Status:</Typography>
                 <Typography marginBottom={1} variant='h5' display='flex' alignItems={'center'}>
                     <Circle
                         sx={{ fontSize: '12px', marginRight: '4px', marginLeft: '4px' }}
@@ -91,6 +94,8 @@ const SelectedCharacter = ({ selectedCharacter }: SelectedCharacterProps) => {
                     />
                     {selectedCharacter.status}
                 </Typography>
+                <Typography color="grey.500">First appeared in:</Typography>
+                <Typography variant='h5'>{firstAppearedInDisplay}</Typography>
             </Grid>
             <Grid item container xs={8} spacing={4}>
                 <Grid item xs={12}>
@@ -103,7 +108,7 @@ const SelectedCharacter = ({ selectedCharacter }: SelectedCharacterProps) => {
                         {originResidentsDisplay}
                     </Box>
                 </Grid>
-                <Divider></Divider>
+                <Grid item xs={12} rowSpacing={1}><Divider></Divider></Grid>
                 <Grid item xs={12}>
                     <Typography color="grey.500">Last known location:</Typography>
                     <Typography variant='h4'>{selectedCharacter.location?.name}</Typography>
@@ -114,8 +119,9 @@ const SelectedCharacter = ({ selectedCharacter }: SelectedCharacterProps) => {
                         {locationResidentsDisplay}
                     </Box>
                 </Grid>
+                <Grid item xs={12}><Divider></Divider></Grid>
                 <Grid item xs={12}>
-                    <Typography color="grey.500">Appeared In:</Typography>
+                    <Typography color="grey.500">Episode Appearances:</Typography>
                     <Box paddingX={1} sx={{ overflowX: 'hidden', backgroundColor: 'grey.800', fontSize: '24px' }} height='100px'>
                         {selectedCharacter.episode?.filter(isDefined)
                             .map((ep, index) =>

@@ -109,15 +109,15 @@ function App() {
   return (
     <>
       <Grid width='100vw' paddingX={8} spacing={2} container>
-        <Grid padding={2} item container direction={'column'} xs={9}>
-          <Card sx={{ height: '100%', padding: 4 }}>
+        <Grid padding={2} height='92vh' item container direction={'column'} xs={9}>
+          <Card sx={{ height: '100%', padding: 4, overflow: 'auto' }}>
             {selectedCharacter && <>
               <SelectedCharacter selectedCharacter={selectedCharacter}></SelectedCharacter>
             </>}
             {isSelectedCharacterDataLoading && <Grid item height={'100%'} xs={12} display='flex' justifyContent={'center'} alignItems={'center'}><CircularProgress></CircularProgress></Grid>}
           </Card>
         </Grid>
-        <Grid item xs={3} height={'90vh'} display='flex' flexDirection={'column'} justifyContent={'space-between'} alignItems={'center'}>
+        <Grid item xs={3} height={'92vh'} display='flex' flexDirection={'column'} justifyContent={'space-between'} alignItems={'center'}>
           <TextField
             placeholder='Search character name'
             fullWidth sx={{ marginBottom: '24px' }}
