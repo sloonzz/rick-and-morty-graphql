@@ -6,12 +6,7 @@ const getCharactersQuery = gql(`
       results {
         id
         name
-        gender
         image
-        origin {
-          id
-        }
-        status
       }
       info {
         count
