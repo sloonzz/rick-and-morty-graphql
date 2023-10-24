@@ -1,110 +1,20 @@
-import { useQuery } from '@apollo/client'
-import { Box, Button, Card, CardActionArea, CardContent, CircularProgress, Grid, TextField, Typography, debounce } from '@mui/material'
-import { gql } from './__generated__'
-import { isDefined } from './utils/is-defined'
-import { ChevronLeft, ChevronRight } from '@mui/icons-material'
-import React from 'react'
-import { SelectedCharacter } from './components/SelectedCharacter'
-import { SEARCH_PARAM_KEYS, useSearchParamsWrapper } from './utils/search-params'
-
-const getCharactersQuery = gql(`
-  query GetCharacters($page: Int!, $search: String) {
-    characters(page: $page, filter: { name: $search }) {
-      results {
-        id
-        name
-        gender
-        image
-        origin {
-          id
-        }
-        status
-      }
-      info {
-        count
-        pages
-        next
-        prev
-      }
-    }
-  }
-`);
-
-const getCharacterQuery = gql(`
-  query GetCharacter($id: ID!) {
-    character(id: $id) {
-        id
-        name
-        gender
-        species
-        image
-        origin {
-          id
-          name
-          residents {
-            id
-            name
-          }
-          dimension
-          type
-        }
-        location {
-          id
-          name
-          residents {
-            id
-            name
-          }
-          dimension
-          type
-        }
-        status
-        episode {
-          episode
-          name
-          air_date
-        }
-    }
-  }
-`)
+import React from 'react';
+import { useQuery } from '@apollo/client';
+import { Card, CircularProgress, Grid } from '@mui/material';
+import { SelectedCharacter } from './components/SelectedCharacter';
+import { SEARCH_PARAM_KEYS, useSearchParamsWrapper } from './utils/search-params';
+import { CharacterSelection } from './components/CharacterSelection';
+import { getCharacterQuery } from './graphql/queries/get-character';
+import { getCharactersQuery } from './graphql/queries/get-characters';
 
 function App() {
-  const { searchParams, setSearchParamValue } = useSearchParamsWrapper()
-  const page = parseInt(searchParams.get(SEARCH_PARAM_KEYS.PAGE) ?? '1')
-  const searchQuery = searchParams.get(SEARCH_PARAM_KEYS.QUERY)
-  const selectedCharacterId = searchParams.get(SEARCH_PARAM_KEYS.SELECTED) ?? '1'
-  const { data, loading } = useQuery(getCharactersQuery, { variables: { page: page, search: searchQuery } })
-  const { data: selectedCharacterData, loading: isSelectedCharacterDataLoading } = useQuery(getCharacterQuery, { variables: { id: selectedCharacterId } })
-  const selectedCharacter = selectedCharacterData?.character
-  const characters = data && data.characters ? data.characters.results?.filter(isDefined) : undefined
-  const totalPages = data?.characters?.info?.pages ?? 0
-  const canGoNextPage = totalPages > page
-  const canGoPrevPage = page !== 1
-
-  const nextPage = () => {
-    if (canGoNextPage) {
-      setSearchParamValue(SEARCH_PARAM_KEYS.PAGE, `${page + 1}`)
-    }
-  }
-
-  const prevPage = () => {
-    if (canGoPrevPage) {
-      setSearchParamValue(SEARCH_PARAM_KEYS.PAGE, `${page - 1}`)
-    }
-  }
-
-  const onSearchInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchParamValue(SEARCH_PARAM_KEYS.QUERY, event.target.value)
-    setSearchParamValue(SEARCH_PARAM_KEYS.PAGE, '1')
-  }
-
-  const onSelectCharacter = (id?: string | null) => {
-    if (id) {
-      setSearchParamValue(SEARCH_PARAM_KEYS.SELECTED, id)
-    }
-  }
-
-  const debouncedSetSearchQuery = debounce(onSearchInputChange, 500)
+  const { searchParams } = useSearchParamsWrapper();
+  const page = parseInt(searchParams.get(SEARCH_PARAM_KEYS.PAGE) ?? '1');
+  const searchQuery = searchParams.get(SEARCH_PARAM_KEYS.QUERY);
+  const selectedCharacterId = searchParams.get(SEARCH_PARAM_KEYS.SELECTED) ?? '1';
+  const { data: getCharactersData, loading: isGetCharactersDataLoading } = useQuery(getCharactersQuery, { variables: { page: page, search: searchQuery } });
+  const { data: selectedCharacterData, loading: isSelectedCharacterDataLoading } = useQuery(getCharacterQuery, { variables: { id: selectedCharacterId } });
+  const selectedCharacter = selectedCharacterData?.character;
 
   return (
     <>
@@ -112,48 +22,17 @@ function App() {
         <Grid padding={2} height='92vh' item container direction={'column'} xs={9}>
           <Card sx={{ height: '100%', padding: 4, overflow: 'auto' }}>
             {selectedCharacter && <>
-              <SelectedCharacter selectedCharacter={selectedCharacter}></SelectedCharacter>
+              <SelectedCharacter selectedCharacter={selectedCharacter} />
             </>}
-            {isSelectedCharacterDataLoading && <Grid item height={'100%'} xs={12} display='flex' justifyContent={'center'} alignItems={'center'}><CircularProgress></CircularProgress></Grid>}
+            {isSelectedCharacterDataLoading && <Grid item height={'100%'} xs={12} display='flex' justifyContent={'center'} alignItems={'center'}><CircularProgress /></Grid>}
           </Card>
         </Grid>
         <Grid item xs={3} height={'92vh'} display='flex' flexDirection={'column'} justifyContent={'space-between'} alignItems={'center'}>
-          <TextField
-            placeholder='Search character name'
-            fullWidth sx={{ marginBottom: '24px' }}
-            onChange={debouncedSetSearchQuery}
-          ></TextField>
-          {loading &&
-            <Box height={'100%'} display={'flex'} justifyContent={'center'} alignItems={'center'}>
-              <CircularProgress></CircularProgress>
-            </Box>
-          }
-          {characters && characters.length > 0 && <Grid container spacing={2} overflow={'scroll'} sx={{ overflowX: 'hidden' }}>
-            {characters.map(character =>
-              <Grid item xs={12}>
-                <Card>
-                  <CardActionArea onClick={() => onSelectCharacter(character.id)}>
-                    <CardContent sx={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                      <Box marginBottom={2} component='img' alt={`${character.name} image`} src={character.image ?? ''}></Box>
-                      <Typography textAlign={'center'} sx={{ fontSize: 14 }} gutterBottom>
-                        {character.name}
-                      </Typography>
-                    </CardContent>
-                  </CardActionArea>
-                </Card>
-              </Grid>
-            )}
-          </Grid>}
-          {characters?.length === 0 && <Box>No characters available</Box>}
-
-          <Box display='flex' justifyContent={'center'}>
-            <Button disabled={!canGoPrevPage || loading} onClick={prevPage}><ChevronLeft></ChevronLeft></Button>
-            <Button disabled={!canGoNextPage || loading} onClick={nextPage}><ChevronRight></ChevronRight></Button>
-          </Box>
+          <CharacterSelection getCharactersData={getCharactersData} loading={isGetCharactersDataLoading} />
         </Grid>
       </Grid>
     </>
-  )
+  );
 }
 
-export default App
+export default App;

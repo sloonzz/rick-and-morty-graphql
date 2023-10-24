@@ -1,5 +1,5 @@
 const isDefined = <T>(value: T | undefined | null): value is T => {
-    return <T>value !== undefined && <T>value !== null;
-}
+  return <T>value !== undefined && <T>value !== null;
+};
 
-export {isDefined}
+export { isDefined };
